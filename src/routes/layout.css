@@ -1,0 +1,182 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+@import '@fontsource-variable/manrope';
+@import '@fontsource-variable/newsreader';
+@import '@fontsource/amiri/400.css';
+
+@theme {
+	--color-primary: #1e88f5;
+	--color-navy: #0a3d91;
+	--color-sky: #5ec8f2;
+	--color-pale: #eaf6ff;
+	--color-slate: #2c3e50;
+}
+
+:root {
+	--primary: #1e88f5;
+	--navy: #0a3d91;
+	--sky: #5ec8f2;
+	--pale: #eaf6ff;
+	--slate: #2c3e50;
+	--font-body: 'Manrope Variable', sans-serif;
+	--font-display: 'Newsreader Variable', Georgia, serif;
+}
+
+html {
+	scroll-behavior: smooth;
+	background: #f9fcff;
+}
+body {
+	margin: 0;
+	min-width: 320px;
+	background: #fff;
+	color: var(--slate);
+	font-family: var(--font-body);
+	-webkit-font-smoothing: antialiased;
+}
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+a {
+	text-decoration: none;
+}
+::selection {
+	background: #bde6ff;
+	color: var(--navy);
+}
+:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--primary) 55%, white);
+	outline-offset: 3px;
+}
+
+.site-container {
+	width: min(100% - 2rem, 1180px);
+	margin-inline: auto;
+}
+.font-display {
+	font-family: var(--font-display);
+}
+.font-arabic {
+	font-family: 'Amiri', serif;
+}
+.eyebrow {
+	color: var(--primary);
+	font-size: 0.72rem;
+	font-weight: 850;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+}
+.page-title {
+	max-width: 19ch;
+	color: var(--navy);
+	font-family: var(--font-display);
+	font-size: clamp(2.5rem, 7vw, 4.7rem);
+	line-height: 0.98;
+	font-weight: 610;
+	letter-spacing: -0.035em;
+}
+.section-title {
+	color: var(--navy);
+	font-family: var(--font-display);
+	font-size: clamp(2rem, 5vw, 3.4rem);
+	line-height: 1.02;
+	font-weight: 610;
+	letter-spacing: -0.025em;
+}
+.button-primary,
+.button-secondary {
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
+	gap: 0.55rem;
+	border-radius: 0.72rem;
+	padding: 0.7rem 1.05rem;
+	font-size: 0.82rem;
+	font-weight: 800;
+	transition:
+		transform 0.16s ease,
+		background 0.16s ease,
+		box-shadow 0.16s ease;
+}
+.button-primary {
+	background: var(--primary);
+	color: #fff;
+	box-shadow: 0 8px 18px rgb(30 136 245 / 20%);
+}
+.button-primary:hover {
+	background: #1177dd;
+	transform: translateY(-1px);
+	box-shadow: 0 12px 24px rgb(30 136 245 / 24%);
+}
+.button-secondary {
+	border: 1px solid #bedff8;
+	background: #fff;
+	color: var(--navy);
+}
+.button-secondary:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+.pattern-light {
+	background-image:
+		linear-gradient(135deg, transparent 75%, rgb(30 136 245 / 5%) 75%),
+		linear-gradient(45deg, transparent 75%, rgb(30 136 245 / 5%) 75%);
+	background-size: 36px 36px;
+}
+.pattern-dark {
+	position: relative;
+	isolation: isolate;
+}
+.pattern-dark::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	opacity: 0.11;
+	background-image: radial-gradient(circle at center, white 1.2px, transparent 1.4px);
+	background-size: 22px 22px;
+	mask-image: linear-gradient(to right, transparent, black 30%, black);
+}
+.form-label {
+	display: grid;
+	gap: 0.5rem;
+	color: var(--navy);
+	font-size: 0.82rem;
+	font-weight: 800;
+}
+.form-control {
+	width: 100%;
+	border: 1px solid #c9e2f6;
+	border-radius: 0.72rem;
+	background: #fff;
+	padding: 0.72rem 0.85rem;
+	color: var(--slate);
+}
+.form-control:focus {
+	border-color: var(--primary);
+	box-shadow: 0 0 0 3px rgb(30 136 245 / 14%);
+	outline: none;
+}
+
+@media (min-width: 640px) {
+	.site-container {
+		width: min(100% - 3rem, 1180px);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
