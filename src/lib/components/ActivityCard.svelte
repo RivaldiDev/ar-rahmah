@@ -9,76 +9,126 @@
 			location: string;
 			coverImage: string;
 		};
+		variant?: 'featured' | 'compact';
 	}
 
-	let { activity }: Props = $props();
+	let { activity, variant = 'featured' }: Props = $props();
 </script>
 
-<article class="activity-card group">
-	<div class="relative overflow-hidden md:w-[42%]">
+<article
+	class:featured={variant === 'featured'}
+	class:compact={variant === 'compact'}
+	class="activity-card group"
+	data-activity-variant={variant}
+>
+	<div class="activity-media relative overflow-hidden">
 		<img
 			src={activity.coverImage}
 			alt=""
 			loading="lazy"
-			class="h-full min-h-56 w-full object-cover transition duration-500 group-hover:scale-[1.035]"
+			class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]"
 		/>
-		<div class="date-block" aria-label={formatDate(activity.startsAt)}>
-			<strong
-				>{formatDate(activity.startsAt, {
-					day: '2-digit',
-					month: undefined,
-					year: undefined
-				})}</strong
-			>
-			<span
-				>{formatDate(activity.startsAt, { day: undefined, month: 'short', year: undefined })}</span
-			>
-		</div>
 	</div>
-	<div class="flex flex-1 flex-col justify-center p-6 md:p-8">
-		<p class="eyebrow">{formatTime(activity.startsAt)} WIB · {activity.location}</p>
-		<h3 class="font-display mt-3 text-2xl leading-tight font-semibold text-navy">
+	<div class="activity-content">
+		<p class="activity-meta">
+			{formatDate(activity.startsAt)} <span aria-hidden="true">·</span>
+			{formatTime(activity.startsAt)} WIB <span aria-hidden="true">·</span>
+			{activity.location}
+		</p>
+		<h3 class="font-display activity-title">
 			{activity.title}
 		</h3>
-		<p class="mt-3 text-sm leading-7 text-slate">{activity.description}</p>
+		<p class="activity-description">{activity.description}</p>
 	</div>
 </article>
 
 <style>
 	.activity-card {
-		display: flex;
-		flex-direction: column;
+		overflow: hidden;
+		border-radius: 0.8rem;
 		border: 1px solid #dceeff;
 		background: #fff;
 	}
-	.date-block {
-		position: absolute;
-		top: 1rem;
-		left: 1rem;
-		width: 3.7rem;
-		background: #fff;
-		color: var(--navy);
-		text-align: center;
-		box-shadow: 0 8px 25px rgb(10 61 145 / 16%);
+	.activity-media {
+		aspect-ratio: 16 / 9;
 	}
-	.date-block strong {
-		display: block;
-		font: 600 1.55rem/1 var(--font-display);
-		padding: 0.55rem 0.2rem 0.15rem;
+	.activity-content {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		padding: 1.25rem;
 	}
-	.date-block span {
-		display: block;
-		background: var(--primary);
-		color: #fff;
-		padding: 0.25rem;
-		font-size: 0.65rem;
+	.activity-meta {
+		color: var(--primary);
+		font-size: 0.68rem;
 		font-weight: 800;
+		letter-spacing: 0.06em;
 		text-transform: uppercase;
 	}
-	@media (min-width: 768px) {
-		.activity-card {
-			flex-direction: row;
-			min-height: 17rem;
+	.activity-meta span {
+		margin-inline: 0.22rem;
+		opacity: 0.45;
+	}
+	.activity-title {
+		margin-top: 0.7rem;
+		color: var(--navy);
+		font-size: 1.5rem;
+		font-weight: 600;
+		line-height: 1.08;
+	}
+	.activity-description {
+		margin-top: 0.65rem;
+		color: var(--slate);
+		font-size: 0.84rem;
+		line-height: 1.65;
+	}
+	.featured {
+		border: 0;
+		background: var(--navy);
+	}
+	.featured .activity-media {
+		aspect-ratio: 16 / 7.4;
+		min-height: 19rem;
+	}
+	.featured .activity-content {
+		padding: 1.6rem clamp(1.4rem, 3vw, 2.25rem) 1.8rem;
+		background: linear-gradient(105deg, #0a3d91, #072e70);
+	}
+	.featured .activity-meta {
+		color: var(--sky);
+	}
+	.featured .activity-title {
+		max-width: 46rem;
+		color: #fff;
+		font-size: clamp(1.8rem, 3vw, 2.65rem);
+	}
+	.featured .activity-description {
+		max-width: 52rem;
+		color: #dceeff;
+		font-size: 0.92rem;
+	}
+	.compact {
+		display: flex;
+		height: 100%;
+		flex-direction: column;
+	}
+	.compact .activity-title {
+		font-size: 1.38rem;
+	}
+	.compact .activity-description {
+		display: -webkit-box;
+		overflow: hidden;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+	}
+	@media (max-width: 639px) {
+		.featured .activity-media {
+			aspect-ratio: 4 / 3;
+			min-height: 0;
+		}
+		.activity-meta {
+			line-height: 1.65;
 		}
 	}
 </style>

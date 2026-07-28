@@ -1,37 +1,66 @@
 <script lang="ts">
 	import ArticleCard from '$lib/components/ArticleCard.svelte';
-	import ActivityCard from '$lib/components/ActivityCard.svelte';
+	import ActivityShowcase from '$lib/components/ActivityShowcase.svelte';
 	import { formatDate, formatTime } from '$lib/domain/content';
 	import type { PageProps } from './$types';
 	import { resolve } from '$app/paths';
+	import { prefersReducedMotion } from 'svelte/motion';
+	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 
 	let { data }: PageProps = $props();
-	let heroPeriod = $state<'day' | 'night'>('day');
-	const heroImage = $derived(
-		heroPeriod === 'night'
-			? '/images/masjid-arrahmah-hero-night.webp'
-			: '/images/masjid-arrahmah-hero-day.webp'
-	);
-	const heroAlt = $derived(
-		heroPeriod === 'night'
-			? 'Masjid Jami Arrahmah pada malam hari dengan papan nama bercahaya putih'
-			: 'Masjid Jami Arrahmah pada siang hari dengan papan nama putih tanpa cahaya'
-	);
+	const heroAutoplayMs = 5_000;
+	const heroSlides = [
+		{
+			image: '/images/masjid-arrahmah-hero-day.webp',
+			alt: 'Masjid Jami Arrahmah pada siang hari dengan kubah dan menara berwarna biru',
+			eyebrow: 'Selamat datang di Masjid Ar-Rahmah',
+			title: 'Teduh dalam ibadah,',
+			accent: 'hangat dalam ukhuwah.',
+			description:
+				'Temukan jadwal salat, majelis ilmu, dan kegiatan yang menghidupkan masjid serta menyatukan warga.',
+			primaryHref: '/pengajian',
+			primaryLabel: 'Lihat jadwal pekan ini'
+		},
+		{
+			image: '/images/activity-youth.webp',
+			alt: 'Remaja Masjid Ar-Rahmah belajar dan berdiskusi bersama di ruang serbaguna',
+			eyebrow: 'Ruang tumbuh jamaah muda',
+			title: 'Belajar bersama,',
+			accent: 'bertumbuh dalam iman.',
+			description:
+				'Kegiatan remaja menghadirkan ruang yang akrab untuk belajar, berkarya, dan saling menguatkan.',
+			primaryHref: '/kegiatan',
+			primaryLabel: 'Lihat kegiatan remaja'
+		},
+		{
+			image: '/images/masjid-arrahmah-hero-night.webp',
+			alt: 'Masjid Jami Arrahmah pada malam hari dengan papan nama bercahaya putih',
+			eyebrow: 'Masjid hidup sepanjang hari',
+			title: 'Dari Subuh hingga Isya,',
+			accent: 'pintu kebaikan terbuka.',
+			description:
+				'Datang untuk berjamaah, menuntut ilmu, atau sekadar menyambung silaturahmi bersama warga.',
+			primaryHref: '/jadwal-salat',
+			primaryLabel: 'Lihat jadwal salat'
+		}
+	] as const;
+	let activeHeroIndex = $state(0);
+	let carouselPaused = $state(false);
+	const activeHeroSlide = $derived(heroSlides[activeHeroIndex]);
+
+	function showHeroSlide(index: number) {
+		activeHeroIndex = (index + heroSlides.length) % heroSlides.length;
+	}
+
+	function showNextHeroSlide() {
+		showHeroSlide(activeHeroIndex + 1);
+	}
 
 	onMount(() => {
-		const updateHeroPeriod = () => {
-			const jakartaHour = Number(
-				new Intl.DateTimeFormat('id-ID', {
-					timeZone: 'Asia/Jakarta',
-					hour: '2-digit',
-					hourCycle: 'h23'
-				}).format(new Date())
-			);
-			heroPeriod = jakartaHour >= 18 || jakartaHour < 5 ? 'night' : 'day';
-		};
-		updateHeroPeriod();
-		const timer = window.setInterval(updateHeroPeriod, 5 * 60 * 1000);
+		const timer = window.setInterval(() => {
+			if (!carouselPaused && !prefersReducedMotion.current) showNextHeroSlide();
+		}, heroAutoplayMs);
 		return () => window.clearInterval(timer);
 	});
 	const prayers = $derived(
@@ -65,42 +94,102 @@
 	<meta property="og:image" content="/images/masjid-arrahmah-hero-day.webp" />
 </svelte:head>
 
-<section class="hero relative isolate overflow-hidden bg-navy text-white sm:min-h-[47rem]">
-	<img
-		src={heroImage}
-		alt={heroAlt}
-		class="absolute inset-0 -z-20 h-full w-full object-cover object-[64%_center]"
-		fetchpriority="high"
-	/>
+<section
+	class="hero relative isolate overflow-hidden bg-navy text-white sm:min-h-[47rem]"
+	aria-roledescription="carousel"
+	aria-label="Sorotan Masjid Ar-Rahmah"
+	onmouseenter={() => (carouselPaused = true)}
+	onmouseleave={() => (carouselPaused = false)}
+	onfocusin={() => (carouselPaused = true)}
+	onfocusout={(event) => {
+		if (!(event.currentTarget as HTMLElement).contains(event.relatedTarget as Node | null)) {
+			carouselPaused = false;
+		}
+	}}
+>
+	{#each heroSlides as slide, index (slide.image)}
+		<img
+			src={slide.image}
+			alt={index === activeHeroIndex ? slide.alt : ''}
+			aria-hidden={index !== activeHeroIndex}
+			class:active={index === activeHeroIndex}
+			class="hero-slide absolute inset-0 -z-20 h-full w-full object-cover"
+			fetchpriority={index === 0 ? 'high' : 'auto'}
+			loading={index === 0 ? 'eager' : 'lazy'}
+		/>
+	{/each}
 	<div class="hero-shade absolute inset-0 -z-10"></div>
+	<button
+		type="button"
+		class="carousel-arrow carousel-arrow-previous"
+		aria-label="Slide sebelumnya"
+		onclick={() => showHeroSlide(activeHeroIndex - 1)}
+	>
+		<span aria-hidden="true">‹</span>
+	</button>
+	<button
+		type="button"
+		class="carousel-arrow carousel-arrow-next"
+		aria-label="Slide berikutnya"
+		onclick={showNextHeroSlide}
+	>
+		<span aria-hidden="true">›</span>
+	</button>
 	<div
 		class="site-container grid min-h-[36rem] content-center py-12 sm:min-h-[47rem] sm:py-20 lg:grid-cols-[1.08fr_.92fr] lg:items-center"
 	>
-		<div class="max-w-2xl pt-4">
-			<p
-				class="inline-flex items-center gap-2 text-xs font-extrabold tracking-[0.18em] text-blue-100 uppercase"
+		{#key activeHeroIndex}
+			<div
+				class="max-w-2xl pt-4"
+				role="group"
+				aria-roledescription="slide"
+				aria-label={`${activeHeroIndex + 1} dari ${heroSlides.length}`}
+				in:fade={{ duration: prefersReducedMotion.current ? 0 : 350 }}
 			>
-				<span class="h-px w-8 bg-sky"></span> Selamat datang di Masjid Ar-Rahmah
-			</p>
-			<h1
-				class="font-display mt-6 text-[clamp(3.4rem,9vw,6.8rem)] leading-[.88] font-semibold tracking-[-.045em] text-white"
-			>
-				Teduh dalam ibadah,<br /><em class="font-normal text-sky not-italic"
-					>hangat dalam ukhuwah.</em
+				<p
+					class="inline-flex items-center gap-2 text-xs font-extrabold tracking-[0.18em] text-blue-100 uppercase"
 				>
-			</h1>
-			<p class="mt-7 max-w-xl text-base leading-8 text-blue-50 sm:text-lg">
-				Temukan jadwal salat, majelis ilmu, dan kegiatan yang menghidupkan masjid serta menyatukan
-				warga.
-			</p>
-			<div class="mt-9 flex flex-wrap gap-3">
-				<a href={resolve('/pengajian')} class="button-primary"
-					>Lihat jadwal pekan ini <span aria-hidden="true">→</span></a
+					<span class="h-px w-8 bg-sky"></span>
+					{activeHeroSlide.eyebrow}
+				</p>
+				<h1
+					class="font-display mt-6 text-[clamp(3.35rem,8vw,6.8rem)] leading-[.88] font-semibold tracking-[-.045em] text-white"
 				>
-				<a
-					href={resolve('/tentang#lokasi')}
-					class="button-secondary bg-white/10! text-white! backdrop-blur-sm">Petunjuk ke masjid</a
-				>
+					{activeHeroSlide.title}<br /><em class="font-normal text-sky not-italic"
+						>{activeHeroSlide.accent}</em
+					>
+				</h1>
+				<p class="mt-7 max-w-xl text-base leading-8 text-blue-50 sm:text-lg">
+					{activeHeroSlide.description}
+				</p>
+				<div class="mt-9 flex flex-wrap gap-3">
+					<a href={resolve(activeHeroSlide.primaryHref)} class="button-primary"
+						>{activeHeroSlide.primaryLabel} <span aria-hidden="true">→</span></a
+					>
+					<a
+						href={resolve('/tentang#lokasi')}
+						class="button-secondary bg-white/10! text-white! backdrop-blur-sm">Petunjuk ke masjid</a
+					>
+				</div>
+			</div>
+		{/key}
+		<div class="carousel-status">
+			<div class="carousel-indicators" aria-label="Pilih slide">
+				{#each heroSlides as slide, index (slide.image)}
+					<button
+						type="button"
+						aria-label={`Tampilkan slide ${index + 1}: ${slide.title} ${slide.accent}`}
+						aria-current={index === activeHeroIndex ? 'true' : undefined}
+						onclick={() => showHeroSlide(index)}
+					>
+						<span aria-hidden="true"></span>
+					</button>
+				{/each}
+			</div>
+			<div class="carousel-progress" class:paused={carouselPaused} aria-hidden="true">
+				{#key activeHeroIndex}
+					<span style={`--hero-autoplay: ${heroAutoplayMs}ms`}></span>
+				{/key}
 			</div>
 		</div>
 	</div>
@@ -133,19 +222,19 @@
 	</div>
 </section>
 
-<section class="py-20 sm:py-28">
+<section id="kegiatan" class="py-20 sm:py-28" aria-label="Kegiatan Masjid Ar-Rahmah">
 	<div class="site-container">
 		<div class="grid items-end gap-6 md:grid-cols-[1fr_auto]">
 			<div>
 				<p class="eyebrow">Yang terdekat</p>
-				<h2 class="section-title mt-3">Mari hidupkan masjid bersama.</h2>
+				<h2 id="kegiatan-heading" class="section-title mt-3">Mari hidupkan masjid bersama.</h2>
 			</div>
 			<a href={resolve('/kegiatan')} class="button-secondary w-fit"
 				>Semua kegiatan <span aria-hidden="true">→</span></a
 			>
 		</div>
-		<div class="mt-10 grid gap-6">
-			{#each data.activities as activity (activity.id)}<ActivityCard {activity} />{/each}
+		<div class="mt-10">
+			<ActivityShowcase activities={data.activities} />
 		</div>
 	</div>
 </section>
@@ -217,6 +306,21 @@
 </section>
 
 <style>
+	.hero-slide {
+		object-position: 64% center;
+		opacity: 0;
+		transform: scale(1.015);
+		transition:
+			opacity 700ms ease,
+			transform 5s ease;
+	}
+	.hero-slide.active {
+		opacity: 1;
+		transform: scale(1);
+	}
+	.hero-slide[src*='activity-youth'] {
+		object-position: center 44%;
+	}
 	.hero-shade {
 		background:
 			linear-gradient(
@@ -228,11 +332,117 @@
 			),
 			linear-gradient(0deg, rgb(5 35 80 / 45%), transparent 45%);
 	}
+	.carousel-arrow {
+		position: absolute;
+		z-index: 20;
+		top: calc(50% - 3.5rem);
+		display: none;
+		width: 2.8rem;
+		height: 2.8rem;
+		place-items: center;
+		border: 1px solid rgb(255 255 255 / 48%);
+		border-radius: 999px;
+		background: rgb(4 31 73 / 36%);
+		color: #fff;
+		font: 300 2rem/1 var(--font-body);
+		backdrop-filter: blur(8px);
+		transition:
+			border-color 180ms ease,
+			background 180ms ease,
+			transform 180ms ease;
+	}
+	.carousel-arrow:hover {
+		border-color: #fff;
+		background: rgb(10 61 145 / 76%);
+		transform: scale(1.04);
+	}
+	.carousel-arrow-previous {
+		left: 1.25rem;
+	}
+	.carousel-arrow-next {
+		right: 1.25rem;
+	}
+	.carousel-status {
+		z-index: 20;
+		width: min(14rem, 100%);
+		margin-top: 2.25rem;
+	}
+	.carousel-indicators {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.carousel-indicators button {
+		display: grid;
+		min-width: 1.75rem;
+		min-height: 1.75rem;
+		place-items: center;
+		border-radius: 999px;
+	}
+	.carousel-indicators span {
+		display: block;
+		width: 0.45rem;
+		height: 0.45rem;
+		border-radius: 999px;
+		background: rgb(255 255 255 / 52%);
+		transition:
+			width 220ms ease,
+			background 220ms ease;
+	}
+	.carousel-indicators [aria-current='true'] span {
+		width: 1.5rem;
+		background: var(--sky);
+	}
+	.carousel-progress {
+		height: 2px;
+		margin: 0.4rem 0.45rem 0;
+		overflow: hidden;
+		background: rgb(255 255 255 / 22%);
+	}
+	.carousel-progress span {
+		display: block;
+		width: 100%;
+		height: 100%;
+		transform-origin: left;
+		background: var(--sky);
+		animation: hero-progress var(--hero-autoplay) linear forwards;
+	}
+	.carousel-progress.paused span {
+		animation-play-state: paused;
+	}
+	@keyframes hero-progress {
+		from {
+			transform: scaleX(0);
+		}
+		to {
+			transform: scaleX(1);
+		}
+	}
+	@media (min-width: 640px) {
+		.carousel-arrow {
+			display: grid;
+		}
+		.carousel-status {
+			position: absolute;
+			right: max(1.5rem, calc((100vw - 1180px) / 2));
+			bottom: 7.15rem;
+			margin-top: 0;
+		}
+	}
 	@media (max-width: 767px) {
 		.hero-shade {
 			background:
 				linear-gradient(90deg, rgb(5 40 98 / 91%), rgb(10 61 145 / 58%)),
 				linear-gradient(0deg, rgb(5 35 80 / 65%), transparent);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.hero-slide {
+			transform: none;
+			transition: none;
+		}
+		.carousel-progress span {
+			animation: none;
 		}
 	}
 </style>

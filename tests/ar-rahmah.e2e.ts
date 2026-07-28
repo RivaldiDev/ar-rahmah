@@ -3,18 +3,49 @@ import { expect, test } from '@playwright/test';
 process.loadEnvFile?.('.env');
 
 test('homepage presents the mosque schedule and latest content', async ({ page }) => {
+	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.goto('/');
 	await expect(page.getByRole('heading', { level: 1 })).toContainText('Teduh dalam ibadah');
 	await expect(page.getByText('Waktu salat hari ini')).toBeVisible();
 	await expect(page.getByRole('link', { name: 'Lihat jadwal pekan ini' })).toBeVisible();
-	await expect(page.locator('.hero > img')).toHaveAttribute(
-		'src',
-		/images\/masjid-arrahmah-hero-(day|night)\.webp/
-	);
+	const carousel = page.getByRole('region', { name: 'Sorotan Masjid Ar-Rahmah' });
+	await expect(
+		carousel.getByRole('img', { name: /Masjid Jami Arrahmah pada siang hari/ })
+	).toHaveAttribute('src', /images\/masjid-arrahmah-hero-day\.webp/);
+});
+
+test('homepage hero carousel advances automatically and supports direct controls', async ({
+	page
+}) => {
+	await page.goto('/');
+	const carousel = page.getByRole('region', { name: 'Sorotan Masjid Ar-Rahmah' });
+	const firstIndicator = carousel.getByRole('button', { name: /Tampilkan slide 1/ });
+	const secondIndicator = carousel.getByRole('button', { name: /Tampilkan slide 2/ });
+
+	await expect(firstIndicator).toHaveAttribute('aria-current', 'true');
+	await expect
+		.poll(async () => secondIndicator.getAttribute('aria-current'), { timeout: 7_000 })
+		.toBe('true');
+
+	await carousel.getByRole('button', { name: 'Slide sebelumnya' }).click();
+	await expect(firstIndicator).toHaveAttribute('aria-current', 'true');
+	await carousel.getByRole('button', { name: 'Slide berikutnya' }).click();
+	await expect(secondIndicator).toHaveAttribute('aria-current', 'true');
+});
+
+test('homepage activities use one editorial feature and three secondary cards', async ({
+	page
+}) => {
+	await page.goto('/');
+	const activities = page.getByRole('region', { name: 'Kegiatan Masjid Ar-Rahmah' });
+
+	await expect(activities.locator('[data-activity-variant="featured"]')).toHaveCount(1);
+	await expect(activities.locator('[data-activity-variant="compact"]')).toHaveCount(3);
 });
 
 test('mobile hero actions stay clear of the prayer schedule panel', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 740 });
+	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.goto('/');
 
 	const action = page.getByRole('link', { name: 'Lihat jadwal pekan ini' });

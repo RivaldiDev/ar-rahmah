@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ActivityCard from '$lib/components/ActivityCard.svelte';
+	import ActivityShowcase from '$lib/components/ActivityShowcase.svelte';
 	import PageIntro from '$lib/components/PageIntro.svelte';
 	import { partitionActivities } from '$lib/domain/content';
 	import type { PageProps } from './$types';
@@ -30,12 +30,8 @@
 			>Sudah berlalu <span>{partitioned.past.length}</span></button
 		>
 	</div>
-	<div class="mt-8 grid gap-6">
-		{#each visibleActivities as activity (activity.id)}<ActivityCard {activity} />{:else}<p
-				class="border border-dashed border-blue-200 bg-pale p-8 text-slate"
-			>
-				Belum ada kegiatan pada bagian ini.
-			</p>{/each}
+	<div class="mt-8">
+		<ActivityShowcase activities={visibleActivities} />
 	</div>
 </section>
 

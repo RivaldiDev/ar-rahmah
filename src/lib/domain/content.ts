@@ -41,6 +41,21 @@ export function partitionActivities<T extends ScheduledItem>(items: T[], now = n
 	};
 }
 
+export function selectHomepageActivities<T extends ScheduledItem>(
+	items: T[],
+	now = new Date(),
+	limit = 4
+) {
+	const { upcoming, past } = partitionActivities(items, now);
+	const byStartTime = (left: T, right: T) =>
+		new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime();
+
+	return [
+		...upcoming.toSorted(byStartTime),
+		...past.toSorted((left, right) => byStartTime(right, left))
+	].slice(0, limit);
+}
+
 export function slugify(value: string) {
 	return value
 		.toLocaleLowerCase('id-ID')

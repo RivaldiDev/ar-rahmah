@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { estimateReadingMinutes, filterArticles, partitionActivities } from './content';
+import {
+	estimateReadingMinutes,
+	filterArticles,
+	partitionActivities,
+	selectHomepageActivities
+} from './content';
 
 describe('content helpers', () => {
 	it('estimates at least one minute for short articles', () => {
@@ -28,5 +33,23 @@ describe('content helpers', () => {
 		const result = partitionActivities(activities, now);
 		expect(result.upcoming.map((item) => item.id)).toEqual(['today', 'future']);
 		expect(result.past.map((item) => item.id)).toEqual(['past']);
+	});
+
+	it('fills the homepage activity showcase with upcoming events before recent recaps', () => {
+		const now = new Date('2026-07-16T12:00:00+07:00');
+		const activities = [
+			{ id: 'old-past', startsAt: new Date('2026-07-01T09:00:00+07:00') },
+			{ id: 'next-week', startsAt: new Date('2026-07-23T09:00:00+07:00') },
+			{ id: 'recent-past', startsAt: new Date('2026-07-15T09:00:00+07:00') },
+			{ id: 'tomorrow', startsAt: new Date('2026-07-17T09:00:00+07:00') },
+			{ id: 'later', startsAt: new Date('2026-08-01T09:00:00+07:00') }
+		];
+
+		expect(selectHomepageActivities(activities, now, 4).map((item) => item.id)).toEqual([
+			'tomorrow',
+			'next-week',
+			'later',
+			'recent-past'
+		]);
 	});
 });
